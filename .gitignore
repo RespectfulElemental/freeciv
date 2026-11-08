@@ -1,0 +1,13 @@
+# Root-level ignores for this fork. Upstream's own ignore rules live in
+# src/.gitignore (and per-directory .gitignore files) and stay anchored there.
+
+# Out-of-tree build and install directories (meson setup build src)
+/build*/
+/install/
+
+# Editor and OS cruft
+*~
+.*.swp
+.DS_Store
+.vscode/
+.idea/
