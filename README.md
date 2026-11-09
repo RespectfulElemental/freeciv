@@ -13,6 +13,7 @@ README, documentation and license notices are in [`src/`](src/README.md).
 | `src/` | The full Freeciv source tree, laid out as upstream ships it. The build system (meson and autotools) runs from here. |
 | `src/doc/` | Upstream documentation, including `INSTALL.meson`. |
 | `CHANGELOG.md` | What this fork changes compared to upstream. |
+| `.github/workflows/windows.yml` | Builds the gtk4 client for Windows and publishes test builds. |
 | `COPYING` | GPL v2, a copy of `src/COPYING` placed here so GitHub detects the license. |
 | `.mailmap` | Upstream's author mapping. Git reads it only from the repository root. |
 
@@ -38,6 +39,26 @@ To install instead, run `ninja -C build install`. `meson configure build` lists
 every build option. `src/doc/INSTALL.meson` has the full build instructions
 and dependency list.
 
+## Windows test builds
+
+GitHub builds the gtk4 client for Windows when you push a tag whose name
+starts with `test-`:
+
+```sh
+git push origin main
+git tag test-2026-11-09            # add .2, .3 ... for more builds that day
+git push origin test-2026-11-09
+```
+
+The build runs under the repo's **Actions** tab. When it finishes, a
+pre-release appears on the **Releases** page with an installer (`-setup.exe`)
+and a no-install `.zip`. The release notes are the newest `CHANGELOG.md`
+section. Send testers the release link. Downloading needs no GitHub account.
+
+To build without publishing, open Actions → *windows test build* → **Run
+workflow**. The files are then attached to the run (downloading those needs
+a sign-in).
+
 ## Pulling in upstream fixes
 
 This repo keeps upstream's history, so upstream fixes can be merged in. The
@@ -55,7 +76,8 @@ git merge -X subtree=src upstream/S3_2
 - The Windows cross-build installer scripts in `src/windows/installer_cross/`
   look for `.git` next to `src/` and so leave the git revision out of their
   version strings. The main meson/autotools builds are unaffected.
-- Upstream's GitHub Actions CI is turned off. Its workflows sit in
+- Upstream's GitHub Actions CI is turned off. Only the fork's own
+  `.github/workflows/windows.yml` runs. Its workflows sit in
   `src/.github/`, and GitHub only runs workflows from a root `.github/`, so
   they never run. They're kept there rather than deleted so that upstream's
   edits to them merge without conflicts.

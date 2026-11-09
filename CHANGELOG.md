@@ -20,6 +20,10 @@ Unless noted, game changes are in the **gtk4 client**.
 - Connect With Rail: Ctrl+L → Ctrl+Alt+L.
 - In-game help lists the new keys (shared by all clients).
 
+### Project
+- Windows test builds: pushing a `test-*` tag builds the gtk4 client on
+  GitHub and publishes an installer and a `.zip` on the Releases page.
+
 ## 2026-11-08
 
 ### Project

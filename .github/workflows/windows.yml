@@ -1,0 +1,109 @@
+# Fork-only: build the gtk4 client for Windows and publish it for testers.
+#
+# Push a tag named test-* to build and publish a pre-release on the repo's
+# Releases page. Run it by hand from the Actions tab to build without
+# publishing; the files are then kept as a run artifact (sign-in needed).
+#
+# The build is upstream's MSYS2 recipe (src/.github/workflows/ci.yml and
+# src/windows/installer_msys2/Makefile.meson), limited to the gtk4 client.
+
+name: windows test build
+
+on:
+  push:
+    tags:
+      - 'test-*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  gtk4:
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: check out
+        uses: actions/checkout@v7.0.1
+
+      - name: install dependencies
+        # Same package list as upstream's ci.yml. The packaging step copies
+        # DLLs from several of these (atk from gtk3, ImageMagick, readline),
+        # so don't trim it to gtk4 alone.
+        uses: msys2/setup-msys2@v2.33.0
+        with:
+          msystem: UCRT64
+          install: >
+            make
+            gettext
+            git
+            mingw-w64-ucrt-x86_64-7zip
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-icu
+            mingw-w64-ucrt-x86_64-curl
+            mingw-w64-ucrt-x86_64-bzip2
+            mingw-w64-ucrt-x86_64-readline
+            mingw-w64-ucrt-x86_64-imagemagick
+            mingw-w64-ucrt-x86_64-SDL2_mixer
+            mingw-w64-ucrt-x86_64-drmingw
+            mingw-w64-ucrt-x86_64-tolua
+            mingw-w64-ucrt-x86_64-gtk3
+            mingw-w64-ucrt-x86_64-gtk4
+            mingw-w64-ucrt-x86_64-qt6-base
+            mingw-w64-ucrt-x86_64-qt6-svg
+            mingw-w64-ucrt-x86_64-SDL2_image
+            mingw-w64-ucrt-x86_64-SDL2_ttf
+            mingw-w64-ucrt-x86_64-SDL2_gfx
+            mingw-w64-ucrt-x86_64-nsis
+
+      - name: build
+        # The variables are those of the Makefile's "ci" target. CI=yes picks
+        # the DLL names that match current MSYS2 packages.
+        shell: msys2 {0}
+        run: |
+          cd src/windows/installer_msys2
+          make -f Makefile.meson VERSION_REVTYPE=git CI=yes \
+            EXTRA_CONFIG="-Dgitrev=true -Dsys-tolua-cmd=true" gtk4-installer
+
+      - name: collect files
+        # Also make a .zip of the portable build: Windows 10 can't open .7z.
+        shell: msys2 {0}
+        run: |
+          set -e
+          out=src/windows/installer_msys2/meson/output
+          mkdir dist
+          cp "$out"/*-setup.exe "$out"/portable/*.7z dist/
+          zip="$(pwd)/$(ls dist/*.7z | sed 's/\.7z$/.zip/')"
+          (cd src/windows/installer_msys2/meson/install/win64-10-client-gtk4 &&
+            7z a -tzip "$zip" ./*)
+          ls -l dist
+
+      - name: keep files as a run artifact
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: freeciv-windows-gtk4
+          path: dist/
+
+      - name: publish pre-release
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          {
+            echo "Test build of \`${GITHUB_SHA::10}\` for Windows 10 and 11 (64-bit)."
+            echo
+            echo "- **Installer:** the \`-setup.exe\`."
+            echo "- **No install:** the \`.zip\` (or \`.7z\`). Unpack it and run \`freeciv-gtk4.cmd\`."
+            echo
+            echo "The build isn't signed, so Windows may say it's from an unknown"
+            echo "publisher. Click **More info**, then **Run anyway**."
+            echo
+            # Newest CHANGELOG.md section: from the first "## " heading up to the next.
+            awk '/^## /{n++} n==1' CHANGELOG.md
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" --prerelease \
+            --title "Test build $GITHUB_REF_NAME" --notes-file notes.md dist/*

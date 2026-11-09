@@ -2,7 +2,7 @@
 
 ## Resume here
 
-2026-11-09: Batches 1–3 are built and tested. Next: **Batch 4** (modern mouse controls) under Active. The roadmap came from `INITIAL-GOALS.md`; its decisions are listed at the top of Active. Target is the **gtk4 client**. Build and run it on the host in the `freeciv-dev` distrobox (`dnf builddep freeciv` done 2026-11-08): `distrobox enter freeciv-dev -- bash -c 'cd ~/projects/mods/workshop-garage/freeciv && ninja -C build'`. The first full build succeeded on 2026-11-08. Run the client with `./run-client.sh`, from the host or inside the box. The sandbox uses its own `build-sandbox/` for server-only checks, so it never touches `build/`. The sandbox has meson and ninja from Homebrew but no GTK4, so it can only do server-only compile checks.
+2026-11-09: Batches 1–3 are built and tested. First, the **first Windows test build** under Blocked (it waits on a push from the host). Then **Batch 4** (modern mouse controls) under Active. The roadmap came from `INITIAL-GOALS.md`; its decisions are listed at the top of Active. Target is the **gtk4 client**. Build and run it on the host in the `freeciv-dev` distrobox (`dnf builddep freeciv` done 2026-11-08): `distrobox enter freeciv-dev -- bash -c 'cd ~/projects/mods/workshop-garage/freeciv && ninja -C build'`. The first full build succeeded on 2026-11-08. Run the client with `./run-client.sh`, from the host or inside the box. The sandbox uses its own `build-sandbox/` for server-only checks, so it never touches `build/`. The sandbox has meson and ninja from Homebrew but no GTK4, so it can only do server-only compile checks.
 
 ## Active
 
@@ -22,7 +22,14 @@ Decisions already made (2026-11-09):
 
 ## Blocked / waiting on human
 
-(none)
+### First Windows test build (2026-11-09)
+`.github/workflows/windows.yml` is written but has never run. Only its YAML syntax was checked locally; the sandbox can't push or watch GitHub runs (`gh` isn't logged in).
+1. [ ] Push main and a test tag from the host: `git push origin main && git tag test-2026-11-09 && git push origin test-2026-11-09`.
+2. [ ] Watch https://github.com/RespectfulElemental/freeciv/actions. If it fails, copy the failing step's log into the chat. The likeliest failure is a DLL `cp` in the packaging step (`install-env-*` in `src/windows/installer_msys2/Makefile.meson`) because an MSYS2 package version moved away from the hardcoded DLL names. Don't pre-fix that.
+3. [ ] When it's green, check that https://github.com/RespectfulElemental/freeciv/releases has the `-setup.exe`, `.7z` and `.zip`, then send the link to the Windows tester.
+4. [ ] The tester starts a game, quicksaves (F5), quickloads (F9) and loads with Ctrl+L. Watch `gameload.c`'s local-server restart: it has never run on Windows.
+
+Done when: the tester has played a game from the release. Next: back to Batch 4.
 
 ## Done (recent)
 
