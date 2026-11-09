@@ -23,10 +23,10 @@ Decisions already made (2026-11-09):
 ## Blocked / waiting on human
 
 ### First Windows test build (2026-11-09)
-`.github/workflows/windows.yml` is written but has never run. Only its YAML syntax was checked locally; the sandbox can't push or watch GitHub runs (`gh` isn't logged in).
-1. [ ] Push main and a test tag from the host: `git push origin main && git tag test-2026-11-09 && git push origin test-2026-11-09`.
-2. [ ] Watch https://github.com/RespectfulElemental/freeciv/actions. If it fails, copy the failing step's log into the chat. The likeliest failure is a DLL `cp` in the packaging step (`install-env-*` in `src/windows/installer_msys2/Makefile.meson`) because an MSYS2 package version moved away from the hardcoded DLL names. Don't pre-fix that.
-3. [ ] When it's green, check that https://github.com/RespectfulElemental/freeciv/releases has the `-setup.exe`, `.7z` and `.zip`, then send the link to the Windows tester.
+`.github/workflows/windows.yml` built and published its first release on 2026-11-09. The sandbox can't push (`gh` isn't logged in there), but it can watch runs through the public API: `curl -s https://api.github.com/repos/RespectfulElemental/freeciv/actions/runs?per_page=3`.
+1. [x] Push main and a test tag from the host: `git push origin main && git tag test-2026-11-09 && git push origin test-2026-11-09`. Pushed 2026-11-09 12:07 UTC, after `gh auth refresh -s workflow` (pushing workflow files needs that scope). The run is https://github.com/RespectfulElemental/freeciv/actions/runs/42614345602.
+2. [x] Run 42614345602 passed in about 10 minutes (build step about 6). The release `test-2026-11-09` has the setup.exe (56 MB), .7z (56 MB) and .zip (93 MB), and the version string is `3.2.7+199caf2`. The steps below still apply to later runs: Watch https://github.com/RespectfulElemental/freeciv/actions. If it fails, copy the failing step's log into the chat. The likeliest failure is a DLL `cp` in the packaging step (`install-env-*` in `src/windows/installer_msys2/Makefile.meson`) because an MSYS2 package version moved away from the hardcoded DLL names. Don't pre-fix that.
+3. [ ] Send the Windows tester https://github.com/RespectfulElemental/freeciv/releases/tag/test-2026-11-09 (the files are checked and present).
 4. [ ] The tester starts a game, quicksaves (F5), quickloads (F9) and loads with Ctrl+L. Watch `gameload.c`'s local-server restart: it has never run on Windows.
 
 Done when: the tester has played a game from the release. Next: back to Batch 4.
