@@ -1664,8 +1664,8 @@ Unit Orders:\n\
   Ctrl+I: set an (I)rrigation waypoint  (when connecting with irrigation)\n\
   j:      drop paratrooper  (paratroop units)\n\
   l:      (l)oad unit on transporter\n\
-  Ctrl+L: connect current and target tile with rai(L)\n\
-  Ctrl+L: set a rai(L) waypoint  (when connecting with rail)\n\
+  Ctrl+Alt+L: connect current and target tile with rai(L)\n\
+  Ctrl+Alt+L: set a rai(L) waypoint  (when connecting with rail)\n\
   m:      build (m)ine  (settler/worker units)\n\
   M:      change terrain by planting\n\
   Ctrl+M: connect current and target tile with M)aglev\n\
@@ -1795,13 +1795,13 @@ Dialogs and Reports:\n\
      F2: open Units Report\n\
      F3: open Nations Report\n\
      F4: open Cities Report\n\
-     F5: open Economy Report\n\
-     F6: open Research Report\n\
-     F7: open World Wonders\n\
-     F8: open Top Cities\n\
-     F9: open Messages dialog\n\
-    F11: open Demographics\n\
-    F12: open Spaceship\n\
+     F6: open Economy Report\n\
+     F7: open Research Report\n\
+     F8: open World Wonders\n\
+    F11: open Messages dialog\n\
+    F12: open Demographics\n\
+    Shift-F11: open Top Cities\n\
+    Shift-F12: open Spaceship\n\
 \n\
     Ctrl-F:       open Find City dialog\n\
     Shift-Ctrl-L: open Worklists dialog\n\
