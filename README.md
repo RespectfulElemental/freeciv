@@ -12,6 +12,7 @@ README, documentation and license notices are in [`src/`](src/README.md).
 | --- | --- |
 | `src/` | The full Freeciv source tree, laid out as upstream ships it. The build system (meson and autotools) runs from here. |
 | `src/doc/` | Upstream documentation, including `INSTALL.meson`. |
+| `CHANGELOG.md` | What this fork changes compared to upstream. |
 | `COPYING` | GPL v2, a copy of `src/COPYING` placed here so GitHub detects the license. |
 | `.mailmap` | Upstream's author mapping. Git reads it only from the repository root. |
 
