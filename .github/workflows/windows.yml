@@ -66,6 +66,29 @@ jobs:
           make -f Makefile.meson VERSION_REVTYPE=git CI=yes \
             EXTRA_CONFIG="-Dgitrev=true -Dsys-tolua-cmd=true" gtk4-installer
 
+      - name: check the programs start
+        # The build passes even when a DLL is missing, so start the programs
+        # with a PATH that has only Windows' own folders. The runner's PATH has
+        # Git's and Perl's MinGW DLLs on it, which could hide a missing one.
+        # 0xC0000135 (-1073741515) means a DLL wasn't found.
+        shell: pwsh
+        run: |
+          $dir = "src/windows/installer_msys2/meson/install/win64-10-client-gtk4"
+          $env:PATH = "C:\Windows\System32;C:\Windows"
+          $failed = $false
+          foreach ($exe in "freeciv-server.exe", "freeciv-gtk4.exe") {
+            $p = Start-Process -FilePath (Join-Path $dir $exe) -ArgumentList "--version" -NoNewWindow -PassThru
+            # Read the handle now; otherwise ExitCode can be empty for a
+            # process that exits this quickly.
+            $null = $p.Handle
+            if (-not $p.WaitForExit(60000)) { $p.Kill(); Write-Host "$exe timed out"; $failed = $true; continue }
+            $p.WaitForExit()
+            if ($null -eq $p.ExitCode) { Write-Host "$exe exit code unavailable"; $failed = $true; continue }
+            Write-Host ("{0} exit code 0x{1:X8}" -f $exe, $p.ExitCode)
+            if ($p.ExitCode -ne 0) { $failed = $true }
+          }
+          if ($failed) { exit 1 }
+
       - name: collect files
         # Also make a .zip of the portable build: Windows 10 can't open .7z.
         shell: msys2 {0}

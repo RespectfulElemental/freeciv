@@ -1,0 +1,3 @@
+# Fork: keep LF on Windows checkouts; MSYS2 bash runs these scripts in CI.
+/windows-bundle-dlls.sh text eol=lf
+/windows-trim-pixbuf-loaders.sh text eol=lf

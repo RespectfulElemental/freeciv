@@ -55,6 +55,20 @@ pre-release appears on the **Releases** page with an installer (`-setup.exe`)
 and a no-install `.zip`. The release notes are the newest `CHANGELOG.md`
 section. Send testers the release link. Downloading needs no GitHub account.
 
+Upstream's packaging lists the DLLs to ship by name, and those lists fall
+behind MSYS2. So `src/windows/installer_msys2/Makefile.meson` runs two
+fork scripts after its own copying:
+
+1. `windows-trim-pixbuf-loaders.sh` removes the gdk-pixbuf loaders for HEIF,
+   AVIF, JPEG XL and WMF. Freeciv doesn't use those formats, and their
+   codecs would add about 60 MB.
+2. `windows-bundle-dlls.sh` reads every program's imports and copies
+   whatever DLLs are missing.
+
+Afterwards, CI starts the server and client with `--version` and a bare
+`PATH`. If a DLL is missing, the build fails there, before anything is
+published.
+
 To build without publishing, open Actions → *windows test build* → **Run
 workflow**. The files are then attached to the run (downloading those needs
 a sign-in).

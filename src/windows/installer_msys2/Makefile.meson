@@ -345,6 +345,9 @@ install-freeciv-qt6: install-freeciv-common
 install-env-gtk3.22: install-env-gtk3-fcmp
 
 install-env-gtk4: install-env-gtk4-fcmp
+	# Fork: drop unused image loaders, then add the DLLs that the lists above miss
+	bash $(SRC_ROOT)/../windows-trim-pixbuf-loaders.sh $(INST_DIR)/$(WINARCH)-client-$(GUI)
+	bash $(SRC_ROOT)/../windows-bundle-dlls.sh $(INST_DIR)/$(WINARCH)-client-$(GUI) $(DLLPATH_PREFIX)
 
 SDL2_DLLS := \
 	SDL2_ttf.dll \
