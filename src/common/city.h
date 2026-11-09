@@ -481,6 +481,10 @@ struct city {
       enum city_updates need_updates;
 
       unsigned char first_citizen_index;
+
+      /* Fork: size of the city's map label when it was last drawn, for
+       * clicking on the label. */
+      int label_width, label_height;
     } client;
   };
 };

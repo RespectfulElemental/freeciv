@@ -49,6 +49,7 @@
 #include "editprop.h"
 #include "finddlg.h"
 #include "gamedlgs.h"
+#include "gameload.h"
 #include "gotodlg.h"
 #include "gui_main.h"
 #include "gui_stuff.h"
@@ -136,6 +137,15 @@ static void save_game_callback(GSimpleAction *action,
 static void save_game_as_callback(GSimpleAction *action,
                                   GVariant *parameter,
                                   gpointer data);
+static void quicksave_callback(GSimpleAction *action,
+                               GVariant *parameter,
+                               gpointer data);
+static void quickload_callback(GSimpleAction *action,
+                               GVariant *parameter,
+                               gpointer data);
+static void load_game_callback(GSimpleAction *action,
+                               GVariant *parameter,
+                               gpointer data);
 
 #ifdef FREECIV_DEBUG
 static void reload_tileset_callback(GSimpleAction *action,
@@ -580,6 +590,15 @@ static struct menu_entry_info menu_entries[] =
     NULL, FALSE },
   { "GAME_SAVE_AS", N_("Save Game _As..."),
     "game_save_as", ACCL_MOD_KEY"<shift>s", MGROUP_SAFE,
+    NULL, FALSE },
+  { "GAME_QUICKSAVE", N_("Quicksave"),
+    "game_quicksave", "F5", MGROUP_SAFE,
+    NULL, FALSE },
+  { "GAME_QUICKLOAD", N_("Quickload"),
+    "game_quickload", "F9", MGROUP_SAFE,
+    NULL, FALSE },
+  { "GAME_LOAD", N_("L_oad Game..."),
+    "game_load", ACCL_MOD_KEY"l", MGROUP_SAFE,
     NULL, FALSE },
   { "MAPIMG_SAVE", N_("Save Map _Image"),
     "save_mapimg", NULL, MGROUP_SAFE,
@@ -1071,6 +1090,9 @@ const GActionEntry acts[] = {
 
   { "game_save", save_game_callback },
   { "game_save_as", save_game_as_callback },
+  { "game_quicksave", quicksave_callback },
+  { "game_quickload", quickload_callback },
+  { "game_load", load_game_callback },
   { "save_mapimg", save_mapimg_callback },
   { "save_mapimg_as", save_mapimg_as_callback },
   { "volume_up", volume_up_callback },
@@ -1288,6 +1310,33 @@ static void save_game_as_callback(GSimpleAction *action, GVariant *parameter,
                                   gpointer data)
 {
   save_game_dialog_popup();
+}
+
+/************************************************************************//**
+  Item "GAME_QUICKSAVE" callback.
+****************************************************************************/
+static void quicksave_callback(GSimpleAction *action, GVariant *parameter,
+                               gpointer data)
+{
+  gameload_quicksave();
+}
+
+/************************************************************************//**
+  Item "GAME_QUICKLOAD" callback.
+****************************************************************************/
+static void quickload_callback(GSimpleAction *action, GVariant *parameter,
+                               gpointer data)
+{
+  gameload_quickload();
+}
+
+/************************************************************************//**
+  Item "GAME_LOAD" callback.
+****************************************************************************/
+static void load_game_callback(GSimpleAction *action, GVariant *parameter,
+                               gpointer data)
+{
+  gameload_load_game();
 }
 
 /************************************************************************//**
@@ -3101,6 +3150,9 @@ static GMenu *setup_menus(GtkApplication *app)
 
   menu_entry_init(topmenu, "GAME_SAVE");
   menu_entry_init(topmenu, "GAME_SAVE_AS");
+  menu_entry_init(topmenu, "GAME_QUICKSAVE");
+  menu_entry_init(topmenu, "GAME_QUICKLOAD");
+  menu_entry_init(topmenu, "GAME_LOAD");
   menu_entry_init(topmenu, "MAPIMG_SAVE");
   menu_entry_init(topmenu, "MAPIMG_SAVE_AS");
   menu_entry_init(topmenu, "VOLUME_UP");
@@ -3777,6 +3829,9 @@ void real_menus_update(void)
                            can_client_access_hack() && C_S_RUNNING <= client_state());
   menu_entry_set_sensitive(map, "GAME_SAVE",
                            can_client_access_hack() && C_S_RUNNING <= client_state());
+  menu_entry_set_sensitive(map, "GAME_QUICKSAVE",
+                           can_client_access_hack() && is_server_running()
+                           && C_S_RUNNING <= client_state());
 
   menu_entry_set_sensitive(map, "SERVER_OPTIONS", client.conn.established);
 

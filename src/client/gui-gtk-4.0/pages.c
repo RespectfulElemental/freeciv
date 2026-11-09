@@ -49,6 +49,7 @@
 #include "chatline.h"
 #include "connectdlg.h"
 #include "dialogs.h"
+#include "gameload.h"
 #include "graphics.h"
 #include "gui_main.h"
 #include "gui_stuff.h"
@@ -2446,6 +2447,8 @@ static bool model_get_conn_iter(GtkTreeModel *model, GtkTreeIter *iter,
 **************************************************************************/
 void real_conn_list_dialog_update(void *unused)
 {
+  gameload_conn_list_changed();
+
   if (client_state() == C_S_PREPARING
       && get_client_page() == PAGE_START
       && connection_list_store != NULL) {
@@ -2973,6 +2976,9 @@ void handle_game_load(bool load_successful, const char *filename)
     if (game.info.is_new_game) {
       /* It's pregame. Create a player and connect to it */
       send_chat("/take -");
+    } else {
+      /* Fork: start a loaded single-player game without the lobby. */
+      gameload_game_loaded();
     }
   }
 }
@@ -3023,6 +3029,14 @@ static void update_load_page(void)
 
   save_dialog_store_update(load_store, files);
   fileinfo_list_destroy(files);
+}
+
+/**********************************************************************//**
+  Fork: "Load to lobby" checkbox toggled.
+**************************************************************************/
+static void load_to_lobby_toggled(GtkCheckButton *button, gpointer data)
+{
+  gameload_set_load_to_lobby(gtk_check_button_get_active(button));
 }
 
 /**********************************************************************//**
@@ -3091,6 +3105,14 @@ GtkWidget *create_load_page(void)
   gtk_widget_set_hexpand(bbox, TRUE);
   gtk_box_set_spacing(GTK_BOX(bbox), 12);
   gtk_grid_attach(GTK_GRID(box), bbox, 0, box_row++, 1, 1);
+
+  /* Fork: the default skips the lobby; this keeps the old behaviour. */
+  button = gtk_check_button_new_with_mnemonic(_("Load to lobb_y"));
+  gtk_check_button_set_active(GTK_CHECK_BUTTON(button),
+                              gameload_get_load_to_lobby());
+  gtk_box_append(GTK_BOX(bbox), button);
+  g_signal_connect(button, "toggled",
+                   G_CALLBACK(load_to_lobby_toggled), NULL);
 
   button = gtk_button_new_with_mnemonic(_("_Browse..."));
   gtk_box_append(GTK_BOX(bbox), button);

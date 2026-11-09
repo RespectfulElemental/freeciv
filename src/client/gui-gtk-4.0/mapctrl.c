@@ -36,6 +36,7 @@
 #include "climisc.h"
 #include "control.h"
 #include "editor.h"
+#include "options.h"
 #include "tilespec.h"
 #include "text.h"
 #include "zoom.h"
@@ -202,6 +203,47 @@ gboolean right_butt_up_mapcanvas(GtkGestureClick *gesture, int n_press,
 }
 
 /**********************************************************************//**
+  Fork: the city whose map label covers canvas position (x, y), or NULL.
+  The label is drawn centred below the city tile (see show_city_desc() in
+  mapview_common.c), so a tile hit-test misses it. Uses each label's size
+  from when it was last drawn.
+**************************************************************************/
+static struct city *city_label_at(double x, double y)
+{
+  if (gui_options.draw_full_citybar
+      ? !(gui_options.draw_city_names || gui_options.draw_city_productions
+          || gui_options.draw_city_growth)
+      : !(gui_options.draw_city_names
+          || gui_options.draw_city_productions)) {
+    /* Same test as show_city_descriptions(): no labels drawn. */
+    return NULL;
+  }
+
+  players_iterate(pplayer) {
+    city_list_iterate(pplayer->cities, pcity) {
+      int w = pcity->client.label_width;
+      int h = pcity->client.label_height;
+      float cx, cy;
+
+      if (w <= 0 || h <= 0
+          || !tile_to_canvas_pos(&cx, &cy, map_zoom, city_tile(pcity))) {
+        continue;
+      }
+
+      cx += tileset_tile_width(tileset) / 2 * map_zoom;
+      cy += tileset_citybar_offset_y(tileset) * map_zoom;
+
+      if (x >= cx - w / 2 && x < cx - w / 2 + w
+          && y >= cy && y < cy + h) {
+        return pcity;
+      }
+    } city_list_iterate_end;
+  } players_iterate_end;
+
+  return NULL;
+}
+
+/**********************************************************************//**
   Handle all left mouse button presses on canvas.
   Future feature: User-configurable mouse clicks.
 **************************************************************************/
@@ -250,7 +292,22 @@ gboolean left_butt_down_mapcanvas(GtkGestureClick *gesture, int n_press,
     infra_placement_set_tile(ptile);
   } else {
     /* Plain LMB click. */
-    action_button_pressed(x, y, SELECT_POPUP);
+    struct city *label_city
+      = (hover_state == HOVER_NONE) ? city_label_at(x, y) : NULL;
+    float cx, cy;
+
+    if (label_city != NULL
+        && tile_to_canvas_pos(&cx, &cy, map_zoom, city_tile(label_city))) {
+      /* Fork: a click on a city's name label acts like a click on the
+       * city itself, so aim at the middle of the city tile. */
+      action_button_pressed((int) (cx + tileset_tile_width(tileset)
+                                        * map_zoom / 2),
+                            (int) (cy + tileset_tile_height(tileset)
+                                        * map_zoom / 2),
+                            SELECT_POPUP);
+    } else {
+      action_button_pressed(x, y, SELECT_POPUP);
+    }
   }
 
   return TRUE;

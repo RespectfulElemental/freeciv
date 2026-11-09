@@ -2422,6 +2422,9 @@ void show_city_descriptions(int canvas_base_x, int canvas_base_y,
       show_city_desc(mapview.store, canvas_x, canvas_y,
                      pcity, &width, &height);
       log_debug("Drawing %s.", city_name_get(pcity));
+      /* Fork: remembered for clicking on the label. */
+      pcity->client.label_width = width;
+      pcity->client.label_height = height;
 
       if (width > max_desc_width || height > max_desc_height) {
         /* The update was incomplete! We queue a new update. Note that
