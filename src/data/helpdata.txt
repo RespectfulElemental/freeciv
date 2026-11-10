@@ -1742,6 +1742,32 @@ Main Map (Mouse):\n\
   Right-click:                   Center tile in view\n\
   Ctrl-center-click:             Wake up sentried units\
 "), _("\
+  Mouse control presets (GTK4):\n\
+  =============================\n\
+  The \"Mouse controls\" interface option picks one of three presets. \
+\"Classic\" is the table above. The default, \"Modern\", changes:\n\
+\n\
+  Left-click-and-drag:           Scroll the map\n\
+  Left-click-and-drag on a selected unit:\n\
+                                 Go-to command for unit, unless it is in\n\
+                                 a city or a stack\n\
+  Right-click:                   Send selected units there (go-to)\n\
+  Right-click in go-to mode:     Cancel it, like Esc\n\
+\n\
+  \"Command\" uses the left button to choose and view, and the right \
+button to give orders:\n\
+\n\
+  Left-click-and-drag:           Scroll the map\n\
+  Ctrl-left-click-and-drag:      Select units/cities by area\n\
+  Shift-Ctrl-left-click-and-drag:\n\
+                                 Append area contents to the selection\n\
+  Right-drag, or hold right:     Start a go-to; release on the destination\n\
+  Right-click in go-to mode:     Give the order there\n\
+  Left-click in go-to mode:      Cancel it, like Esc\n\
+  Center-click:                  Center the map there and show tile info\n\
+\n\
+  In both, left-clicks act when the button is released.\
+"), _("\
   Quick unit selection:\n\
   =====================\n\
   Ctrl-left-click on tile:       Select a sea unit (prefers transporters)\n\

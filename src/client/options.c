@@ -326,6 +326,7 @@ struct client_options gui_options = {
   .gui_gtk4_message_chat_location = GUI_GTK_MSGCHAT_SEPARATE,
   .gui_gtk4_small_display_layout = FALSE,
   .gui_gtk4_mouse_over_map_focus = FALSE,
+  .gui_gtk4_mouse_controls = GUI_GTK_MOUSE_MODERN,
   .gui_gtk4_chatline_autocompletion = TRUE,
   .gui_gtk4_citydlg_xsize = GUI_GTK4_CITYDLG_DEFAULT_XSIZE,
   .gui_gtk4_citydlg_ysize = GUI_GTK4_CITYDLG_DEFAULT_YSIZE,
@@ -1857,6 +1858,26 @@ static const struct copt_val_name
 }
 
 /************************************************************************//**
+  Fork: mouse control preset names accessor.
+****************************************************************************/
+static const struct copt_val_name
+  *gui_gtk_mouse_controls_name(int value)
+{
+  /* Order must match enum GUI_GTK_MOUSE_* */
+  static const struct copt_val_name names[] = {
+    /* TRANS: enum value for 'gui_gtk4_mouse_controls' */
+    { "CLASSIC", N_("Classic") },
+    /* TRANS: enum value for 'gui_gtk4_mouse_controls' */
+    { "MODERN",  N_("Modern") },
+    /* TRANS: enum value for 'gui_gtk4_mouse_controls' */
+    { "COMMAND", N_("Command") }
+  };
+
+  return (0 <= value && value < ARRAY_SIZE(names)
+          ? names + value : NULL);
+}
+
+/************************************************************************//**
   Popup tech help setting names accessor.
 ****************************************************************************/
 static const struct copt_val_name
@@ -3014,6 +3035,28 @@ static struct client_option client_options[] = {
                   N_("If this option is enabled, then the map will be "
                      "focused when the mouse hovers over it."),
                   COC_INTERFACE, GUI_GTK4, FALSE, NULL),
+  /* Fork: mouse control presets, see gui-gtk-4.0/modernmouse.c */
+  GEN_ENUM_OPTION(gui_gtk4_mouse_controls,
+                  N_("Mouse controls"),
+                  N_("How the mouse works on the map.\n"
+                     "'Classic': Freeciv's own controls. Left-click "
+                     "selects, right-click centers the map, right-drag "
+                     "selects an area.\n"
+                     "'Modern': left-drag scrolls the map, right-click "
+                     "sends the selected units to a tile, right-drag "
+                     "selects an area. A left-drag from a selected unit "
+                     "standing alone outside a city still gives it a "
+                     "go-to order if "
+                     "\"Keyboardless goto\" is on.\n"
+                     "'Command': the left button chooses and views, the "
+                     "right button gives orders. Left-click selects, "
+                     "left-drag scrolls, Ctrl+left-drag selects an area. "
+                     "Hold or drag the right button to start a go-to, and "
+                     "release it on the destination; a left-click cancels. "
+                     "Middle-click centers the map there and shows tile "
+                     "info."),
+                  COC_INTERFACE, GUI_GTK4, GUI_GTK_MOUSE_MODERN,
+                  gui_gtk_mouse_controls_name, NULL),
   GEN_BOOL_OPTION(gui_gtk4_chatline_autocompletion,
                   N_("Player or user name autocompletion"),
                   N_("If this option is turned on, the tabulation key "

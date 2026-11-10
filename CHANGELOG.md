@@ -3,6 +3,20 @@
 Changes this fork makes to Freeciv 3.2 (upstream `S3_2`). Newest first.
 Unless noted, game changes are in the **gtk4 client**.
 
+## 2026-11-10
+
+### Added
+- **Mouse controls** presets (Game → Options → Local Client → Interface):
+  - **Classic**: Freeciv's own controls, as before.
+  - **Modern** (the default): left-drag scrolls the map, right-click sends
+    the selected units to a tile, right-drag selects an area. Right-click
+    no longer centers the map; in go-to mode it cancels, like Esc.
+  - **Command**: left chooses and views, right gives orders. Left-drag
+    scrolls, Ctrl+left-drag selects an area. Hold or drag the right button
+    to start a go-to and let go on the destination; a left-click cancels.
+    Middle-click centers the map there and shows tile info.
+  - In Modern and Command, left-clicks act when you let go.
+
 ## 2026-11-09
 
 ### Added

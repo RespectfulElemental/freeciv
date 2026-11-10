@@ -56,11 +56,14 @@
 #include "inputdlg.h"
 #include "mapview.h"
 #include "menu.h"
+#include "modernmouse.h"
 #include "rallypointdlg.h"
 
 #include "mapctrl.h"
 
 extern gint cur_x, cur_y;
+
+static void plain_left_click(double x, double y); /* Fork */
 
 /**********************************************************************//**
   Popup a label with information about the tile, unit, city, when the user
@@ -172,6 +175,16 @@ gboolean left_butt_up_mapcanvas(GtkGestureClick *gesture, int n_press,
                                             x, y);
   }
 
+  {
+    double click_x, click_y;
+
+    if (modernmouse_left_release(x, y, &click_x, &click_y)) {
+      /* Fork: modern mouse controls act on release. The goto release
+       * below also clears the drag-goto state this click may arm. */
+      plain_left_click(click_x, click_y);
+    }
+  }
+
   release_goto_button(x, y);
 
   return TRUE;
@@ -190,6 +203,11 @@ gboolean right_butt_up_mapcanvas(GtkGestureClick *gesture, int n_press,
   }
 
   release_goto_button(x, y);
+
+  if (modernmouse_right_release(x, y)) {
+    /* Fork: mouse control preset handled it. */
+    return TRUE;
+  }
 
   if (rbutton_down || hover_state != HOVER_NONE)  {
     GdkModifierType state;
@@ -244,6 +262,30 @@ static struct city *city_label_at(double x, double y)
 }
 
 /**********************************************************************//**
+  Fork: a plain left click (no modifiers) at canvas position (x, y). Run on
+  press, or on release with modern mouse controls.
+**************************************************************************/
+static void plain_left_click(double x, double y)
+{
+  struct city *label_city
+    = (hover_state == HOVER_NONE) ? city_label_at(x, y) : NULL;
+  float cx, cy;
+
+  if (label_city != NULL
+      && tile_to_canvas_pos(&cx, &cy, map_zoom, city_tile(label_city))) {
+    /* Fork: a click on a city's name label acts like a click on the
+     * city itself, so aim at the middle of the city tile. */
+    action_button_pressed((int) (cx + tileset_tile_width(tileset)
+                                      * map_zoom / 2),
+                          (int) (cy + tileset_tile_height(tileset)
+                                      * map_zoom / 2),
+                          SELECT_POPUP);
+  } else {
+    action_button_pressed(x, y, SELECT_POPUP);
+  }
+}
+
+/**********************************************************************//**
   Handle all left mouse button presses on canvas.
   Future feature: User-configurable mouse clicks.
 **************************************************************************/
@@ -267,8 +309,10 @@ gboolean left_butt_down_mapcanvas(GtkGestureClick *gesture, int n_press,
 
   state = gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
 
-  /* <SHIFT> + <CONTROL> + LMB : Adjust workers. */
-  if ((state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
+  if (modernmouse_left_press_early(x, y, state)) {
+    /* Fork: mouse control preset handles it. */
+  } else if ((state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
+    /* <SHIFT> + <CONTROL> + LMB : Adjust workers. */
     adjust_workers_button_pressed(x, y);
   } else if (state & GDK_CONTROL_MASK) {
     /* <CONTROL> + LMB : Quickselect a sea unit. */
@@ -290,24 +334,10 @@ gboolean left_butt_down_mapcanvas(GtkGestureClick *gesture, int n_press,
     /* Nothing here, rally_set_tile() already did what we wanted */
   } else if (infra_placement_mode()) {
     infra_placement_set_tile(ptile);
+  } else if (modernmouse_left_press(x, y, ptile)) {
+    /* Fork: modern mouse controls; click on release, or pan on drag. */
   } else {
-    /* Plain LMB click. */
-    struct city *label_city
-      = (hover_state == HOVER_NONE) ? city_label_at(x, y) : NULL;
-    float cx, cy;
-
-    if (label_city != NULL
-        && tile_to_canvas_pos(&cx, &cy, map_zoom, city_tile(label_city))) {
-      /* Fork: a click on a city's name label acts like a click on the
-       * city itself, so aim at the middle of the city tile. */
-      action_button_pressed((int) (cx + tileset_tile_width(tileset)
-                                        * map_zoom / 2),
-                            (int) (cy + tileset_tile_height(tileset)
-                                        * map_zoom / 2),
-                            SELECT_POPUP);
-    } else {
-      action_button_pressed(x, y, SELECT_POPUP);
-    }
+    plain_left_click(x, y);
   }
 
   return TRUE;
@@ -339,6 +369,11 @@ gboolean right_butt_down_mapcanvas(GtkGestureClick *gesture, int n_press,
 
   state = gtk_event_controller_get_current_event_state(
                                     GTK_EVENT_CONTROLLER(gesture));
+
+  if (modernmouse_right_press(x, y, state)) {
+    /* Fork: mouse control preset handles it. */
+    return TRUE;
+  }
 
   /* <CONTROL> + <ALT> + RMB : insert city or tile chat link. */
   /* <CONTROL> + <ALT> + <SHIFT> + RMB : insert unit chat link. */
@@ -376,6 +411,7 @@ gboolean right_butt_down_mapcanvas(GtkGestureClick *gesture, int n_press,
     if (hover_state == HOVER_NONE) {
       anchor_selection_rectangle(x, y);
       rbutton_down = TRUE; /* Causes rectangle updates */
+      modernmouse_right_anchor(x, y); /* Fork */
     }
   }
 
@@ -411,6 +447,10 @@ gboolean middle_butt_down_mapcanvas(GtkGestureClick *gesture, int n_press,
     wakeup_button_pressed(x, y);
   } else if (ptile) {
     /* Plain Middle click. */
+    if (modernmouse_middle_centers()) {
+      /* Fork: Command preset centers first; the popup follows the tile. */
+      recenter_button_pressed(x, y);
+    }
     popit(ptile);
   }
 
@@ -495,6 +535,7 @@ gboolean move_mapcanvas(GtkEventControllerMotion *controller,
   if (rbutton_down && (state & GDK_BUTTON3_MASK)) {
     update_selection_rectangle(x, y);
   }
+  modernmouse_motion(x, y, state); /* Fork: left-drag pans */
 
   if (keyboardless_goto_button_down && hover_state == HOVER_NONE) {
     maybe_activate_keyboardless_goto(x, y);

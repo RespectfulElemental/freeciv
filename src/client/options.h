@@ -69,6 +69,14 @@ enum {
   GUI_GTK_MSGCHAT_MERGED
 };
 
+/* Fork: gui_gtk4_mouse_controls presets, see gui-gtk-4.0/modernmouse.c.
+ * Order must match strings in options.c:gui_gtk_mouse_controls_name() */
+enum {
+  GUI_GTK_MOUSE_CLASSIC,
+  GUI_GTK_MOUSE_MODERN,
+  GUI_GTK_MOUSE_COMMAND
+};
+
 enum {
   /* Order must match strings in
    * options.c:gui_popup_tech_help_name() */
@@ -348,6 +356,7 @@ struct client_options
   int gui_gtk4_message_chat_location; /* enum GUI_GTK_MSGCHAT_* */
   bool gui_gtk4_small_display_layout;
   bool gui_gtk4_mouse_over_map_focus;
+  int gui_gtk4_mouse_controls; /* Fork: enum GUI_GTK_MOUSE_* */
   bool gui_gtk4_chatline_autocompletion;
   int gui_gtk4_citydlg_xsize;
   int gui_gtk4_citydlg_ysize;
